@@ -112,7 +112,7 @@ if __name__ == "__main__":
 
     logging.info("Model loaded!")
 
-    data_set = BrainDataset(args.input, stack_size=args.patch_size, mask_net=pre_net)
+    data_set = BrainDataset(args.input, stack_size=args.patch_size, mask_net=pre_net, verbose=args.verbose)
     loaders = BrainLoaders(data_set, ratios=[0.0, 1.0])
 
     make_dir(args.output)

@@ -49,7 +49,8 @@ def calculate_stats(images):
 
 
 class BrainDataset(Dataset):
-    def __init__(self, imgs_dir, img_postfix='T1', masks_dir=None, stack_size=16, stride=14, mask_net=False):
+    def __init__(self, imgs_dir, img_postfix='T1', masks_dir=None, stack_size=16, stride=14, mask_net=False,
+                 verbose=False):
         self.img_filenames = listdir(imgs_dir)
 
         tags = [file[:file.find(img_postfix)] if file.find(img_postfix) != -1 else file[:file.find('.')]
@@ -76,7 +77,7 @@ class BrainDataset(Dataset):
                      f'\nWith {len(self.img_files)} examples and {len(self.slices)} slices each')
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.length = len(self.img_files) * len(self.slices)
-
+        self.verbose = verbose
         if mask_net:
             logging.info(f'Loading Pre-process Network from {mask_net}')
             pre_net = UNet3D(in_channels=1, out_channels=2, final_sigmoid=False, testing=True)
@@ -130,6 +131,8 @@ class BrainDataset(Dataset):
         file_idx = idx // len(self.slices)
         slice_idx = idx % len(self.slices)
 
+        if self.verbose:
+            logging.info(f"Getting slice {slice_idx} from image {file_idx}")
         phase = 'train' if idx in self.train_indices else 'val'
         seed = GLOBAL_RANDOM_STATE.randint(10000000)
 
