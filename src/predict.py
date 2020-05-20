@@ -11,6 +11,7 @@ import torch
 from dataset.dataset import BrainDataset
 from dataset.loader import BrainLoaders
 from dataset.slicer import Sticher
+from torch.utils.data import DataLoader
 
 from unet3d.model import UNet3D
 from unet3d.utils import make_dir
@@ -28,14 +29,14 @@ def predict(model: UNet3D, brain_loader: BrainLoaders, out_files, verbose=True):
             file_idx = batch['file_idx'][0].item()
             slices = batch['slice_idx']
 
-            logging.info("\nPredicting image {} ...".format(file_idx))
+            logging.info(f"\nPredicting image {file_idx} of shape {img_batch.size()}...")
 
             result = Sticher(brain_loader.dataset.input_shape, brain_loader.dataset.slices)
-
-            for img_patch, slice_idx in zip(img_batch, slices):
+            batch_loader = DataLoader(list(zip(img_batch, slices)), batch_size=1,
+                                      num_workers=loader.num_workers, pin_memory=loader.pin_memory)
+            for img_patch, slice_idx in batch_loader:
                 if verbose:
-                    logging.info(f"Slice id: {slice_idx} starting...")
-                img_patch = img_patch.unsqueeze(0)
+                    logging.info(f"Slice id: {slice_idx.item()} of shape {list(img_patch.size())} starting...")
 
                 output = model(img_patch)
 
@@ -45,17 +46,17 @@ def predict(model: UNet3D, brain_loader: BrainLoaders, out_files, verbose=True):
                     output = model.final_activation(output)
 
                 if verbose:
-                    logging.info(f"Slice id: {slice_idx} outputted.")
+                    logging.info(f"Slice id: {slice_idx.item()} outputted.")
 
                 output_patch = BrainDataset.post_process(output)
 
                 if verbose:
-                    logging.info(f"Slice id: {slice_idx} post-processed.")
+                    logging.info(f"Slice id: {slice_idx.item()} post-processed.")
 
                 result.update(output_patch, slice_idx)
 
                 if verbose:
-                    logging.info(f"Slice id: {slice_idx} saved.")
+                    logging.info(f"Slice id: {slice_idx.item()} saved.")
 
             result.save(out_files[file_idx], brain_loader.dataset.get_nib_file(file_idx))
             elapsed = timeit.default_timer() - epoch_start_time

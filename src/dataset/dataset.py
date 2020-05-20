@@ -1,6 +1,7 @@
 import logging
 from glob import glob
 from os import listdir
+from os.path import join
 
 import nibabel as nib
 import numpy as np
@@ -16,7 +17,7 @@ GLOBAL_RANDOM_STATE = np.random.RandomState(47)
 
 
 def get_nii_files(directory, tag):
-    path = directory + tag + '*'
+    path = join(directory, tag) + '*'
     # mask_path = self.masks_dir + tag.replace(self.img_prefix, self.mask_prefix) + '*'
 
     file = glob(path)

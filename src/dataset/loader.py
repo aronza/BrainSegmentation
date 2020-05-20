@@ -72,7 +72,7 @@ class BrainLoaders:
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.dataset = dataset
 
-    def train_loader(self):
+    def train_loader(self) -> DataLoader:
         train_indices = expand_file_indices(self.train_files, self.dataset.num_slices())
         self.dataset.set_training_set(train_indices)
         return DataLoader(Subset(self.dataset, train_indices),
@@ -81,14 +81,14 @@ class BrainLoaders:
                           num_workers=0 if self.device.type == 'cuda' else 8,
                           pin_memory=self.device.type != 'cuda')
 
-    def validation_loader(self):
+    def validation_loader(self) -> DataLoader:
         return DataLoader(Subset(self.dataset, expand_file_indices(self.validation_files, self.dataset.num_slices())),
                           batch_size=self.dataset.num_slices(),
                           shuffle=False,
-                          num_workers=0 if self.device.type == 'cuda' else 8,
+                          num_workers=0 if self.device.type == 'cuda' else 4,
                           pin_memory=self.device.type != 'cuda')
 
-    def test_loader(self):
+    def test_loader(self) -> DataLoader:
         return DataLoader(Subset(self.dataset, expand_file_indices(self.test_files, self.dataset.num_slices())),
                           batch_size=self.dataset.num_slices(),
                           shuffle=False,
