@@ -15,6 +15,9 @@
     Patch-size controls the height of 2D stacks to be fed into the model.
     
     Images are expected to be in .nii.gz format.
+    
+    Example Command:
+        BrainSegmentation/src/predict.py --type wm --name WM  --input predict_input/  --output wm_output/ --num-workers 12
 
     optional arguments:
       -h, --help            show this help message and exit
