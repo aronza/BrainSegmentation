@@ -132,7 +132,7 @@ class BrainDataset(Dataset):
         slice_idx = idx % len(self.slices)
 
         if self.verbose:
-            logging.info(f"Getting slice {slice_idx} from image {file_idx}")
+            logging.info(f"{idx}: Getting slice {slice_idx} from image {file_idx}")
         phase = 'train' if idx in self.train_indices else 'val'
         seed = GLOBAL_RANDOM_STATE.randint(10000000)
 
