@@ -20,44 +20,38 @@ from unet3d.utils import make_dir
 def predict(model: UNet3D, brain_loader: BrainLoaders, out_files, verbose=True):
     model.eval()
 
-    loader = brain_loader.test_loader()
+    loaders = brain_loader.test_loader()
+
     with torch.no_grad():
-        for batch in loader:
+        for loader in loaders:  # For every image
             epoch_start_time = timeit.default_timer()
-
-            img_batch = batch['image']
-            file_idx = batch['file_idx'][0].item()
-            slices = batch['slice_idx']
-
-            logging.info(f"\nPredicting image {file_idx} of shape {img_batch.size()}...")
-
             result = Sticher(brain_loader.dataset.input_shape, brain_loader.dataset.slices)
-            batch_loader = DataLoader(list(zip(img_batch, slices)), batch_size=1,
-                                      num_workers=loader.num_workers, pin_memory=loader.pin_memory)
-            for img_patch, slice_idx in batch_loader:
+
+            for batch in loader:  # For every patch in image
+                img_patch = batch['image']
+                file_idx = batch['file_idx'].item()
+                slice_idx = batch['slice_idx'].item()
+
                 if verbose:
-                    logging.info(f"Slice id: {slice_idx.item()} of shape {list(img_patch.size())} starting...")
+                    logging.info(f"Predicting image {file_idx} slice id: {slice_idx} "
+                                 f"of shape {list(img_patch.size())} starting...")
 
                 output = model(img_patch)
 
-                # if model contains final_activation layer for normalizing logits apply it, otherwise
-                # the evaluation metric will be incorrectly computed
-                if hasattr(model, 'final_activation') and model.final_activation is not None and not model.testing:
-                    output = model.final_activation(output)
-
                 if verbose:
-                    logging.info(f"Slice id: {slice_idx.item()} outputted.")
+                    logging.info(f"Slice id: {slice_idx} outputted.")
 
                 output_patch = BrainDataset.post_process(output)
 
                 if verbose:
-                    logging.info(f"Slice id: {slice_idx.item()} post-processed.")
+                    logging.info(f"Slice id: {slice_idx} post-processed.")
 
                 result.update(output_patch, slice_idx)
 
                 if verbose:
-                    logging.info(f"Slice id: {slice_idx.item()} saved.")
+                    logging.info(f"Slice id: {slice_idx} saved.")
 
+            # Once all the patches are done, save the image
             result.save(out_files[file_idx], brain_loader.dataset.get_nib_file(file_idx))
             elapsed = timeit.default_timer() - epoch_start_time
             logging.info(f'Predicted in {elapsed} seconds')
@@ -114,7 +108,7 @@ if __name__ == "__main__":
     logging.info("Model loaded!")
 
     data_set = BrainDataset(args.input, stack_size=args.patch_size, mask_net=pre_net, verbose=args.verbose)
-    loaders = BrainLoaders(data_set, ratios=[0.0, 1.0])
+    test_loader = BrainLoaders(data_set, ratios=[0.0, 1.0])
 
     make_dir(args.output)
     output_files = {}
@@ -129,4 +123,4 @@ if __name__ == "__main__":
         output_files[idx] = join(args.output, filename[:postfix_idx] + args.name + filename[extension_idx:])
 
     logging.info("Starting Predicting...")
-    predict(model=net, brain_loader=loaders, out_files=output_files, verbose=args.verbose)
+    predict(model=net, brain_loader=test_loader, out_files=output_files, verbose=args.verbose)

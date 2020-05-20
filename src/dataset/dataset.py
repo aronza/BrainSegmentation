@@ -6,8 +6,7 @@ from os.path import join
 import nibabel as nib
 import numpy as np
 import torch
-from sklearn.model_selection import train_test_split
-from torch.utils.data import Dataset, Subset, DataLoader
+from torch.utils.data import Dataset
 
 from unet3d.model import UNet3D
 from .slicer import build_slices

@@ -4,10 +4,10 @@ import torch
 from torch.utils.data import Subset, DataLoader
 from sklearn.model_selection import train_test_split
 from .dataset import BrainDataset
+from torch.utils.data.sampler import BatchSampler
 
 
 def pick_files(file_range, picked_files, ratio, name):
-
     if picked_files is not None:
         other_files = [i for i in file_range if i not in picked_files]
     elif ratio >= 1.0:
@@ -88,9 +88,9 @@ class BrainLoaders:
                           num_workers=0 if self.device.type == 'cuda' else 8,
                           pin_memory=self.device.type != 'cuda')
 
-    def test_loader(self) -> DataLoader:
-        return DataLoader(Subset(self.dataset, expand_file_indices(self.test_files, self.dataset.num_slices())),
-                          batch_size=self.dataset.num_slices(),
-                          shuffle=False,
-                          num_workers=0 if self.device.type == 'cuda' else 8,
-                          pin_memory=self.device.type != 'cuda')
+    def test_loader(self) -> [DataLoader]:
+        return [DataLoader(Subset(self.dataset, expand_file_indices([file], self.dataset.num_slices())),
+                           batch_size=1,
+                           shuffle=False,
+                           num_workers=0 if self.device.type == 'cuda' else 8,
+                           pin_memory=self.device.type != 'cuda') for file in self.test_files]
