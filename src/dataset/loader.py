@@ -92,5 +92,5 @@ class BrainLoaders:
         return DataLoader(Subset(self.dataset, expand_file_indices(self.test_files, self.dataset.num_slices())),
                           batch_size=self.dataset.num_slices(),
                           shuffle=False,
-                          num_workers=0 if self.device.type == 'cuda' else 8,
+                          num_workers=0 if self.device.type == 'cuda' else 4,
                           pin_memory=self.device.type != 'cuda')
