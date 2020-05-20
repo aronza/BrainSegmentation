@@ -115,4 +115,5 @@ if __name__ == "__main__":
 
         output_files[idx] = join(args.output, filename[:postfix_idx] + args.name + filename[extension_idx:])
 
+    logging.info("Starting Predicting...")
     predict(model=net, brain_loader=loaders, out_files=output_files)
