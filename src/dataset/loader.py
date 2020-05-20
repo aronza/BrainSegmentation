@@ -81,16 +81,16 @@ class BrainLoaders:
                           num_workers=0 if self.device.type == 'cuda' else 8,
                           pin_memory=self.device.type != 'cuda')
 
-    def validation_loader(self) -> DataLoader:
+    def validation_loader(self, num_workers=8) -> DataLoader:
         return DataLoader(Subset(self.dataset, expand_file_indices(self.validation_files, self.dataset.num_slices())),
                           batch_size=self.dataset.num_slices(),
                           shuffle=False,
-                          num_workers=0 if self.device.type == 'cuda' else 8,
+                          num_workers=0 if self.device.type == 'cuda' else num_workers,
                           pin_memory=self.device.type != 'cuda')
 
-    def test_loader(self) -> [DataLoader]:
+    def test_loader(self, num_workers=8) -> [DataLoader]:
         return [DataLoader(Subset(self.dataset, expand_file_indices([file], self.dataset.num_slices())),
                            batch_size=1,
                            shuffle=False,
-                           num_workers=0 if self.device.type == 'cuda' else 8,
+                           num_workers=0 if self.device.type == 'cuda' else num_workers,
                            pin_memory=self.device.type != 'cuda') for file in self.test_files]

@@ -17,10 +17,10 @@ from unet3d.model import UNet3D
 from unet3d.utils import make_dir
 
 
-def predict(model: UNet3D, brain_loader: BrainLoaders, out_files, verbose=True):
+def predict(model: UNet3D, brain_loader: BrainLoaders, out_files, num_workers, verbose=True,):
     model.eval()
 
-    loaders = brain_loader.test_loader()
+    loaders = brain_loader.test_loader(num_workers=num_workers)
 
     with torch.no_grad():
         for loader in loaders:  # For every image
@@ -70,6 +70,8 @@ def get_args():
                         help='directory of output files', required=True)
     parser.add_argument('-p', '--patch-size', metavar='P', type=int, default=16,
                         help='Patch Size', dest='patch_size')
+    parser.add_argument('-w', '--num-workers', metavar='WORKERS', type=int, default=8,
+                        help='Number of threads to use in CPU', dest='workers')
     parser.add_argument('-n', '--name', type=str, default='OUT',
                         help='Postfix to append to output filenames', dest='name')
     parser.add_argument('-v', "--verbose", default=False, action="store_true", help="Log more detail")
@@ -123,4 +125,4 @@ if __name__ == "__main__":
         output_files[idx] = join(args.output, filename[:postfix_idx] + args.name + filename[extension_idx:])
 
     logging.info("Starting Predicting...")
-    predict(model=net, brain_loader=test_loader, out_files=output_files, verbose=args.verbose)
+    predict(model=net, brain_loader=test_loader, out_files=output_files, num_workers=args.workers, verbose=args.verbose)
